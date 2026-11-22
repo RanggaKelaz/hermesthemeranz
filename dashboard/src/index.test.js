@@ -312,6 +312,7 @@ test("manifest is slot-only and CSS keeps focus, touch targets, and narrow layou
   assert.deepEqual(manifest.slots, ["backdrop", "header-right", "chat:top"]);
   assert.match(css, /:focus-visible/);
   assert.match(css, /min-height:\s*44px/);
+  assert.match(css, /\.htr-logo-toggle\s*\{[^}]*align-self:\s*flex-start/);
   assert.match(css, /@media\s*\(max-width:/);
   assert.match(css, /prefers-reduced-motion/);
   assert.doesNotMatch(css, /hermes-chat-xterm-host|\.xterm/);
