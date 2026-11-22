@@ -220,7 +220,7 @@ test("manifest and stylesheet retain only the dashboard backdrop styling", () =>
   assert.deepEqual(manifest.slots, ["backdrop"]);
   assert.match(css, /--theme-font-sans:\s*"Nunito Sans"/);
   assert.match(css, /color-mix\(in srgb, var\(--theme-terminal-background/);
-  assert.doesNotMatch(css, /#chat-composer-toggle|#chat-composer-panel|\.htr-composer|\.htr-control/);
+  assert.doesNotMatch(css, /\.htr-composer|\.htr-control/);
   assert.match(css, /prefers-reduced-motion/);
   assert.doesNotMatch(css, /\.xterm-viewport|\.xterm-screen/);
 });

@@ -4,9 +4,11 @@ Plugin ringan untuk tema dashboard Hermes: GIF black hole sebagai latar, panel t
 
 ## Yang diubah
 
-Plugin memasang satu slot `backdrop` dan mengaktifkan tema selama plugin terpasang. Setelan lama `enabled` atau `paused` yang mungkin tersimpan di browser diabaikan; berkas penyimpanannya tidak disentuh. GIF tetap dipakai dalam kondisi biasa, sedangkan `prefers-reduced-motion` menggunakan gambar diam. CSS hanya mengubah font UI melalui token tema dan latar pembungkus panel terminal; font monospace, warna ANSI, isi, serta perilaku xterm tidak ditimpa.
+Plugin memasang satu slot `backdrop` dan mengaktifkan tema selama plugin diizinkan. Setelan lama `enabled` atau `paused` yang mungkin tersimpan di browser diabaikan; berkas penyimpanannya tidak disentuh. GIF tetap dipakai dalam kondisi biasa, sedangkan `prefers-reduced-motion` menggunakan gambar diam. CSS mengubah font UI dan latar pembungkus panel terminal; font monospace, warna ANSI, isi, serta perilaku xterm tidak ditimpa.
 
 Latar panel terminal dibuat 90% opak sebagai perubahan halus, dengan nilai cadangan untuk browser yang belum mendukung `color-mix()`. Latar konten terminal/xterm sendiri tidak dibuat transparan.
+
+Pada host yang masih memiliki composer dan kontrol jeda dari tema lama, plugin menyembunyikan kontrol tersebut dan lapisan latar lama hanya selama plugin aktif. Berkas host dan fungsi terminal tidak diubah.
 
 ## Font terminal
 
@@ -25,9 +27,11 @@ git clone https://github.com/RanggaKelaz/hermesthemeranz.git \
   "$HERMES_ROOT/plugins/hermesthemeranz"
 ```
 
-Untuk instalasi berbasis profil, gunakan Hermes home profil tersebut. Di dashboard, buka **Plugins** dan gunakan kontrol refresh/rescan setelah menambahkan berkas, lalu buka kembali dashboard pada waktu yang aman. Jika plugin belum termuat, mulai ulang proses dashboard dan buka lagi. Hindari me-refresh tab Chat saat sesi sedang aktif.
+Untuk instalasi berbasis profil, gunakan Hermes home profil tersebut. Tambahkan `hermesthemeranz` ke daftar `plugins.enabled` pada konfigurasi profil, dengan mempertahankan entri yang sudah ada. Di dashboard, buka **Plugins** dan gunakan kontrol refresh/rescan setelah menambahkan berkas, lalu buka kembali dashboard pada waktu yang aman. Jika plugin belum termuat, mulai ulang proses dashboard dan buka lagi. Hindari me-refresh tab Chat saat sesi sedang aktif.
 
 Untuk beberapa server Hermes terpisah, pasang plugin di tiap Hermes home. Jika semua perangkat memakai satu server bersama, cukup pasang sekali di server itu.
+
+Jalankan `pnpm test` untuk tes plugin. Tes visual CSS menggunakan Chrome di `/usr/bin/google-chrome` atau lokasi dari `CHROME_BIN`; jika tidak tersedia, tes visual dilewati.
 
 ## Bridge lama
 

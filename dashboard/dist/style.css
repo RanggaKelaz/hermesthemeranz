@@ -7,6 +7,15 @@ body.hermesthemeranz-active [data-layout-variant] {
   background-color: transparent !important;
 }
 
+body.hermesthemeranz-active [data-layout-variant]:has([data-chat-active="true"] .hermes-chat-scene[data-blackhole]) {
+  background-image: none !important;
+}
+
+body.hermesthemeranz-active .hermes-chat-workspace > div:has(> #chat-composer-toggle),
+body.hermesthemeranz-active .hermes-chat-workspace > #chat-composer-panel {
+  display: none !important;
+}
+
 body.hermesthemeranz-active [data-layout-variant] div:has(> .hermes-chat-xterm-host) {
   background-color: rgba(4, 28, 28, 0.9) !important;
   background-color: color-mix(in srgb, var(--theme-terminal-background, #041c1c) 90%, transparent) !important;
