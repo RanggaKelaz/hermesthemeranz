@@ -21,14 +21,18 @@ git apply "$PLUGIN_DIR/patches/hermes-active-chat-bridge.patch"
 
 Check that `git rev-parse HEAD` prints the recorded revision before applying. If your version differs, stop and port the small bridge against that version with review. Do not force the patch or reset local changes.
 
-Then verify the host from its `web/` directory:
+Then verify the host from its `web/` directory. Build into a new temporary directory so the existing dashboard files are not replaced:
 
 ```sh
+HOST_ROOT="$(git rev-parse --show-toplevel)"
+BUILD_DIR="$(mktemp -d)/web_dist"
 pnpm exec vitest run src/plugins/registry.test.ts src/pages/ChatPage.test.tsx
 pnpm typecheck
 pnpm lint
-pnpm build
+node "$HOST_ROOT/scripts/build/web.mjs" --source "$HOST_ROOT" --icons "$HOST_ROOT" --out "$BUILD_DIR"
 ```
+
+The normal `pnpm build` writes to `hermes_cli/web_dist` and may replace existing files. To activate the bridge, plan a safe deployment of the complete new build after backing up the current dashboard, then restart or reopen at a time when active Chat sessions will not be interrupted. Do not replace an existing build without the host owner's approval.
 
 If your host already provides the bridge, skip the patch.
 
