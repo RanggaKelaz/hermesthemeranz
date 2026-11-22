@@ -156,17 +156,13 @@ function findElement(node, predicate) {
   return undefined;
 }
 
-test("registers only the three approved dashboard slots", () => {
+test("registers only the dashboard backdrop slot", () => {
   const runtime = createRuntime();
   installHermesThemeRanz(runtime);
 
   assert.deepEqual(
     runtime.registrations.map(([, plugin, slot]) => [plugin, slot]),
-    [
-      [PLUGIN_NAME, "backdrop"],
-      [PLUGIN_NAME, "header-right"],
-      [PLUGIN_NAME, "chat:top"],
-    ],
+    [[PLUGIN_NAME, "backdrop"]],
   );
 });
 
@@ -186,108 +182,20 @@ test("enables the theme by default and removes its marker when unloaded", () => 
   assert.equal(runtime.classNames.has(ACTIVE_CLASS), false);
 });
 
-test("sends only after explicit submit and clears the draft after success", () => {
-  const sent = [];
-  const runtime = createRuntime({ bridge: (text) => (sent.push(text), true) });
+test("keeps the theme active despite stale disabled and paused settings", () => {
+  const runtime = createRuntime({ settings: { enabled: false, paused: true } });
   installHermesThemeRanz(runtime);
-  const ChatTop = registeredComponent(runtime, "chat:top");
-  const renderer = createRenderer(runtime);
-
-  let tree = renderer.render(ChatTop);
-  assert.deepEqual(sent, []);
-  findElement(tree, (element) => element.props["aria-controls"] === "hermesthemeranz-composer")
-    .props.onClick();
-  tree = renderer.render(ChatTop);
-  const input = findElement(tree, (element) => element.type === "input");
-  input.props.onChange({ currentTarget: { value: "hello  " } });
-  tree = renderer.render(ChatTop);
-  const form = findElement(tree, (element) => element.type === "form");
-  let prevented = false;
-  form.props.onSubmit({ preventDefault: () => (prevented = true) });
-
-  assert.equal(prevented, true);
-  assert.deepEqual(sent, ["hello  "]);
-  tree = renderer.render(ChatTop);
-  assert.equal(findElement(tree, (element) => element.type === "input")?.props.value, "");
-});
-
-test("Enter during IME composition never submits", () => {
-  const sent = [];
-  const runtime = createRuntime({ bridge: (text) => (sent.push(text), true) });
-  installHermesThemeRanz(runtime);
-  const ChatTop = registeredComponent(runtime, "chat:top");
-  const renderer = createRenderer(runtime);
-  let tree = renderer.render(ChatTop);
-  findElement(tree, (element) => element.props["aria-controls"] === "hermesthemeranz-composer")
-    .props.onClick();
-  tree = renderer.render(ChatTop);
-  const input = findElement(tree, (element) => element.type === "input");
-  let prevented = false;
-  input.props.onKeyDown({
-    key: "Enter",
-    keyCode: 229,
-    isComposing: true,
-    preventDefault: () => (prevented = true),
-  });
-
-  assert.equal(prevented, true);
-  assert.deepEqual(sent, []);
-});
-
-test("keeps the draft and explains missing or unready host bridges", () => {
-  for (const bridge of [undefined, () => false]) {
-    const runtime = createRuntime({ bridge });
-    installHermesThemeRanz(runtime);
-    const ChatTop = registeredComponent(runtime, "chat:top");
-    const renderer = createRenderer(runtime);
-    let tree = renderer.render(ChatTop);
-    findElement(tree, (element) => element.props["aria-controls"] === "hermesthemeranz-composer")
-      .props.onClick();
-    tree = renderer.render(ChatTop);
-    const input = findElement(tree, (element) => element.type === "input");
-    input.props.onChange({ currentTarget: { value: "keep this" } });
-    tree = renderer.render(ChatTop);
-    findElement(tree, (element) => element.type === "form").props.onSubmit({
-      preventDefault() {},
-    });
-    tree = renderer.render(ChatTop);
-
-    assert.equal(findElement(tree, (element) => element.type === "input")?.props.value, "keep this");
-    assert.match(JSON.stringify(tree), /bridge|koneksi|dukungan/i);
-    if (!bridge) {
-      assert.equal(
-        findElement(tree, (element) => element.type === "button" && element.props.type === "submit")
-          ?.props.disabled,
-        true,
-      );
-    }
-  }
-});
-
-test("stores enabled and paused choices locally and restores the legacy UI when disabled", () => {
-  const runtime = createRuntime();
-  installHermesThemeRanz(runtime);
-  const Header = registeredComponent(runtime, "header-right");
-  const headerRenderer = createRenderer(runtime);
-  const initial = headerRenderer.render(Header);
-  const buttons = initial.children.filter((element) => element.type === "button");
-  assert.equal(buttons.length, 2);
-
-  buttons[1].props.onClick();
-  const stored = JSON.parse(runtime.storage.get(SETTINGS_KEY));
-  assert.equal(stored.paused, true);
-  const backdropRenderer = createRenderer(runtime);
   const Backdrop = registeredComponent(runtime, "backdrop");
-  const paused = backdropRenderer.render(Backdrop);
-  assert.equal(
-    findElement(paused, (element) => element.type === "div")?.props["data-motion"],
-    "still",
-  );
+  const renderer = createRenderer(runtime);
+  const tree = renderer.render(Backdrop);
 
-  const refreshedHeader = headerRenderer.render(Header);
-  findElement(refreshedHeader, (element) => element.props["aria-label"] === "Nonaktifkan tema")
-    .props.onClick();
-  assert.equal(JSON.parse(runtime.storage.get(SETTINGS_KEY)).enabled, false);
+  assert.equal(runtime.classNames.has(ACTIVE_CLASS), true);
+  assert.equal(
+    findElement(tree, (element) => element.type === "div")?.props["data-motion"],
+    "animated",
+  );
+  assert.equal(runtime.storage.get(SETTINGS_KEY), JSON.stringify({ enabled: false, paused: true }));
+  renderer.unmount();
   assert.equal(runtime.classNames.has(ACTIVE_CLASS), false);
 });
 
@@ -303,17 +211,16 @@ test("reduced motion selects the still image", () => {
   );
 });
 
-test("manifest is slot-only and CSS keeps focus, touch targets, and narrow layouts", () => {
+test("manifest and stylesheet retain only the dashboard backdrop styling", () => {
   const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
   const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
 
   assert.equal(manifest.name, PLUGIN_NAME);
   assert.equal(manifest.tab.hidden, true);
-  assert.deepEqual(manifest.slots, ["backdrop", "header-right", "chat:top"]);
-  assert.match(css, /:focus-visible/);
-  assert.match(css, /min-height:\s*44px/);
-  assert.match(css, /\.htr-logo-toggle\s*\{[^}]*align-self:\s*flex-start/);
-  assert.match(css, /@media\s*\(max-width:/);
+  assert.deepEqual(manifest.slots, ["backdrop"]);
+  assert.match(css, /--theme-font-sans:\s*"Nunito Sans"/);
+  assert.match(css, /color-mix\(in srgb, var\(--theme-terminal-background/);
+  assert.doesNotMatch(css, /#chat-composer-toggle|#chat-composer-panel|\.htr-composer|\.htr-control/);
   assert.match(css, /prefers-reduced-motion/);
-  assert.doesNotMatch(css, /hermes-chat-xterm-host|\.xterm/);
+  assert.doesNotMatch(css, /\.xterm-viewport|\.xterm-screen/);
 });

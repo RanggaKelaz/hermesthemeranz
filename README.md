@@ -1,44 +1,22 @@
 # Hermes Theme Ranz
 
-A Hermes dashboard plugin for the black-hole backdrop, a compact second composer, and a restrained black, white, blue, and gray theme.
+Plugin ringan untuk tema dashboard Hermes: GIF black hole sebagai latar, panel terminal dashboard yang sedikit tembus pandang, dan font UI sans-serif yang lembut. Terminal Chat tetap terminal asli Hermes—tanpa composer kedua, kontrol tema/jeda, WebSocket, PTY, atau sesi tambahan.
 
-The composer sits outside xterm and sends one line through the active Chat writer. It does not open a second WebSocket, PTY, terminal, or session. The GIF is only a dashboard backdrop. Hermes continues to render terminal ANSI colors and output as before.
+## Yang diubah
 
-## Compatibility
+Plugin memasang satu slot `backdrop` dan mengaktifkan tema selama plugin terpasang. Setelan lama `enabled` atau `paused` yang mungkin tersimpan di browser diabaikan; berkas penyimpanannya tidak disentuh. GIF tetap dipakai dalam kondisi biasa, sedangkan `prefers-reduced-motion` menggunakan gambar diam. CSS hanya mengubah font UI melalui token tema dan latar pembungkus panel terminal; font monospace, warna ANSI, isi, serta perilaku xterm tidak ditimpa.
 
-The theme can load without the host bridge, but the second composer stays disabled and explains why. To send messages, the host must expose `window.__HERMES_PLUGIN_SDK__.chat.sendToActiveChat(text)`.
+Latar panel terminal dibuat 90% opak sebagai perubahan halus, dengan nilai cadangan untuk browser yang belum mendukung `color-mix()`. Latar konten terminal/xterm sendiri tidak dibuat transparan.
 
-The patch in [`patches/hermes-active-chat-bridge.patch`](patches/hermes-active-chat-bridge.patch) targets Hermes revision `caafe5389ae585ef77387a962aee05b1bcf17029`. It changes only the plugin SDK type, SDK registry, and ChatPage registration for the existing active PTY writer. It is not a Hermes fork.
+## Font terminal
 
-After cloning the plugin below, if your Hermes checkout is at that exact revision, run these commands from its repository root. For a profile-specific plugin install, set `HERMES_HOME` to that profile's Hermes home first:
+Plugin ini **tidak mengubah font xterm**. Hermes mengatur xterm melalui `fontFamily: TERMINAL_FONT_FAMILY` di `web/src/pages/ChatPage.tsx` (saat ini baris 523). Stack yang dipakai didefinisikan di `web/src/lib/terminal-font-refit.ts` (baris 6–10); saat ini dimulai dengan JetBrains Mono yang dibundel host.
 
-```sh
-git rev-parse HEAD
-PLUGIN_DIR="${HERMES_HOME:-$HOME/.hermes}/plugins/hermesthemeranz"
-git apply --check "$PLUGIN_DIR/patches/hermes-active-chat-bridge.patch"
-git apply "$PLUGIN_DIR/patches/hermes-active-chat-bridge.patch"
-```
+Untuk mengganti font terminal dengan font monospace yang lebih lembut tanpa mengubah warna atau perilaku, penyesuaian perlu dilakukan di host: bundel font yang dipilih (misalnya IBM Plex Mono) di `web/src/index.css`, taruh nama font tersebut di urutan pertama `TERMINAL_FONT_FAMILY`, dan perbarui `BUNDLED_FACES` agar refit xterm menunggu face yang sama. `ChatPage` dapat tetap mengirim opsi tersebut ke xterm tanpa perubahan lain. Jangan hanya menimpa CSS `.xterm`—renderernya menggambar melalui canvas/WebGL dan ukuran sel harus dihitung ulang. Host aktif dan build-nya tidak diubah oleh plugin ini.
 
-Check that `git rev-parse HEAD` prints the recorded revision before applying. If your version differs, stop and port the small bridge against that version with review. Do not force the patch or reset local changes.
+## Pasang plugin
 
-Then verify the host from its `web/` directory. Build into a new temporary directory so the existing dashboard files are not replaced:
-
-```sh
-HOST_ROOT="$(git rev-parse --show-toplevel)"
-BUILD_DIR="$(mktemp -d)/web_dist"
-pnpm exec vitest run src/plugins/registry.test.ts src/pages/ChatPage.test.tsx
-pnpm typecheck
-pnpm lint
-node "$HOST_ROOT/scripts/build/web.mjs" --source "$HOST_ROOT" --icons "$HOST_ROOT" --out "$BUILD_DIR"
-```
-
-The normal `pnpm build` writes to `hermes_cli/web_dist` and may replace existing files. To activate the bridge, plan a safe deployment of the complete new build after backing up the current dashboard, then restart or reopen at a time when active Chat sessions will not be interrupted. Do not replace an existing build without the host owner's approval.
-
-If your host already provides the bridge, skip the patch.
-
-## Install the plugin
-
-Install the repository under the Hermes home used by the dashboard process. The usual home is `~/.hermes`; set `HERMES_HOME` first if your installation uses another root.
+Pasang repo ini di folder `plugins` milik Hermes yang digunakan dashboard. Biasanya:
 
 ```sh
 HERMES_ROOT="${HERMES_HOME:-$HOME/.hermes}"
@@ -47,20 +25,14 @@ git clone https://github.com/RanggaKelaz/hermesthemeranz.git \
   "$HERMES_ROOT/plugins/hermesthemeranz"
 ```
 
-For a profile-specific install, use that profile's Hermes home and its `plugins/` directory. Hermes also searches the root plugin directory when a process runs under a profile, so a plugin installed in the shared root can serve multiple profiles.
+Untuk instalasi berbasis profil, gunakan Hermes home profil tersebut. Di dashboard, buka **Plugins** dan gunakan kontrol refresh/rescan setelah menambahkan berkas, lalu buka kembali dashboard pada waktu yang aman. Jika plugin belum termuat, mulai ulang proses dashboard dan buka lagi. Hindari me-refresh tab Chat saat sesi sedang aktif.
 
-In the dashboard, open **Plugins** and use its refresh/rescan control after adding the files. Then open or reopen the dashboard at a safe time. If the plugin still does not load, restart the Hermes dashboard process and open it again. Avoid reloading Chat while an active session is in use.
+Untuk beberapa server Hermes terpisah, pasang plugin di tiap Hermes home. Jika semua perangkat memakai satu server bersama, cukup pasang sekali di server itu.
 
-The plugin is enabled by default. Its enabled and animation-pause choices are stored in that browser's local storage. They do not sync to other browsers or devices. Reduced-motion settings use the still image instead of the GIF.
+## Bridge lama
 
-## Separate hosts and shared servers
+Tema saat ini tidak memerlukan jembatan aktif-chat. Patch historis [`patches/hermes-active-chat-bridge.patch`](patches/hermes-active-chat-bridge.patch) tetap disimpan sebagai artefak kompatibilitas dari versi composer sebelumnya, tetapi **jangan menerapkannya hanya untuk mengaktifkan tema ini**. Ia tidak diperlukan untuk latar, transparansi panel, atau font UI.
 
-If each device runs its own Hermes server, apply the compatible host bridge and install the plugin on each server's Hermes home. A plugin copy on one server does not add the bridge to another server.
+## Atribusi
 
-If several devices connect to one shared Hermes server, install the bridge and plugin once on that server. The plugin will be available to each connected browser, but theme and pause choices remain local to each browser.
-
-## Trust and attribution
-
-Hermes loads the plugin's JavaScript and CSS in the dashboard. Install plugins only from code you trust. The composer sends only after you submit it, and it retains the draft if the active Chat writer is unavailable.
-
-Black-hole binary visualization: NASA Goddard Space Flight Center, Jeremy Schnittman, and Brian P. Powell. Source: [NASA Scientific Visualization Studio, 14132](https://svs.gsfc.nasa.gov/14132/). The original GIF is [available here](https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Binary_Black_Holes_Accretion_Disk.gif).
+Visualisasi black-hole binary: NASA Goddard Space Flight Center, Jeremy Schnittman, dan Brian P. Powell. Sumber: [NASA Scientific Visualization Studio, 14132](https://svs.gsfc.nasa.gov/14132/). GIF asli: [BHW Binary Black Holes Accretion Disk](https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Binary_Black_Holes_Accretion_Disk.gif).

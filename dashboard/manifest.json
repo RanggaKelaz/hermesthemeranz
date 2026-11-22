@@ -2,17 +2,13 @@
   "name": "hermesthemeranz",
   "label": "Hermes Theme Ranz",
   "version": "1.0.0",
-  "description": "Dashboard-only dark theme and a second composer for the active Hermes Chat session.",
+  "description": "Dashboard-only black-hole backdrop, soft UI font, and translucent terminal pane.",
   "icon": "Puzzle",
   "tab": {
     "path": "/hermesthemeranz",
     "hidden": true
   },
-  "slots": [
-    "backdrop",
-    "header-right",
-    "chat:top"
-  ],
+  "slots": ["backdrop"],
   "entry": "dist/index.js",
   "css": "dist/style.css"
 }
