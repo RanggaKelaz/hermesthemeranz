@@ -1,0 +1,13 @@
+{
+  "name": "hermesthemeranz",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "test": "node --test dashboard/src/index.test.js",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

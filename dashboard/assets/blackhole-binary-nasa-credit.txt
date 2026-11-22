@@ -1,0 +1,3 @@
+Black hole binary visualization: NASA Goddard Space Flight Center / Jeremy Schnittman and Brian P. Powell.
+Source: https://svs.gsfc.nasa.gov/14132/
+Original: https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Binary_Black_Holes_Accretion_Disk.gif
