@@ -1,42 +1,52 @@
 # Hermes Theme Ranz
 
-Plugin ringan untuk tema dashboard Hermes: GIF black hole sebagai latar, panel terminal dashboard yang sedikit tembus pandang, dan font UI sans-serif yang lembut. Terminal Chat tetap terminal asli Hermes—tanpa composer kedua, kontrol tema/jeda, WebSocket, PTY, atau sesi tambahan.
+Tema dashboard Hermes ini menambahkan dua tampilan untuk percakapan yang sama: **Terminal** dan **Bubble**. Terminal tetap menjadi mode awal. Bubble memakai sesi, PTY, writer, dan event feed Hermes yang sedang aktif, bukan membuat chat atau koneksi baru.
 
-## Yang diubah
+## Fitur
 
-Plugin memasang satu slot `backdrop` dan mengaktifkan tema selama plugin diizinkan. Setelan lama `enabled` atau `paused` yang mungkin tersimpan di browser diabaikan; berkas penyimpanannya tidak disentuh. GIF tetap dipakai dalam kondisi biasa, sedangkan `prefers-reduced-motion` menggunakan gambar diam. CSS mengubah font UI dan latar pembungkus panel terminal; font monospace, warna ANSI, isi, serta perilaku xterm tidak ditimpa.
+- Bubble menampilkan riwayat user dan assistant, composer, serta status aktivitas dari event Hermes.
+- Progress numerik hanya ditampilkan bila Hermes mengirim nilai `percent` valid antara 0 dan 100. Tanpa nilai tersebut, indikator tetap indeterminate.
+- Tool args dan hasil internal tidak ditampilkan sebagai pesan. Jika riwayat atau event feed tidak tersedia, Bubble menjelaskan masalah dan menyediakan jalan kembali ke Terminal.
+- Logo Hermes dan sapaan hanya muncul setelah riwayat sesi berhasil dimuat dan terbukti kosong.
+- GIF black-hole, panel transparan, font Nunito Sans, selector mode yang dapat dipakai dengan keyboard, dan garis aktivitas putih dipertahankan. Garis bergerak hanya saat ada event nyata dan berhenti pada pengaturan reduced motion.
+- Pilihan Terminal atau Bubble disimpan di browser. Berpindah tampilan tidak melepas atau menyambungkan ulang PTY aktif.
 
-Latar panel terminal dibuat 90% opak sebagai perubahan halus, dengan nilai cadangan untuk browser yang belum mendukung `color-mix()`. Latar konten terminal/xterm sendiri tidak dibuat transparan.
+## Instalasi satu perintah
 
-Pada host yang masih memiliki composer dan kontrol jeda dari tema lama, plugin menyembunyikan kontrol tersebut dan lapisan latar lama hanya selama plugin aktif. Berkas host dan fungsi terminal tidak diubah.
-
-## Font terminal
-
-Plugin ini **tidak mengubah font xterm**. Hermes mengatur xterm melalui `fontFamily: TERMINAL_FONT_FAMILY` di `web/src/pages/ChatPage.tsx` (saat ini baris 523). Stack yang dipakai didefinisikan di `web/src/lib/terminal-font-refit.ts` (baris 6–10); saat ini dimulai dengan JetBrains Mono yang dibundel host.
-
-Untuk mengganti font terminal dengan font monospace yang lebih lembut tanpa mengubah warna atau perilaku, penyesuaian perlu dilakukan di host: bundel font yang dipilih (misalnya IBM Plex Mono) di `web/src/index.css`, taruh nama font tersebut di urutan pertama `TERMINAL_FONT_FAMILY`, dan perbarui `BUNDLED_FACES` agar refit xterm menunggu face yang sama. `ChatPage` dapat tetap mengirim opsi tersebut ke xterm tanpa perubahan lain. Jangan hanya menimpa CSS `.xterm`—renderernya menggambar melalui canvas/WebGL dan ukuran sel harus dihitung ulang. Host aktif dan build-nya tidak diubah oleh plugin ini.
-
-## Pasang plugin
-
-Pasang repo ini di folder `plugins` milik Hermes yang digunakan dashboard. Biasanya:
+Jalankan perintah ini sebagai pengguna Hermes yang akan memakai plugin:
 
 ```sh
-HERMES_ROOT="${HERMES_HOME:-$HOME/.hermes}"
-mkdir -p "$HERMES_ROOT/plugins"
-git clone https://github.com/RanggaKelaz/hermesthemeranz.git \
-  "$HERMES_ROOT/plugins/hermesthemeranz"
+installer="$(mktemp)"
+trap 'rm -f "$installer"' EXIT
+if curl -fsSL --proto '=https' --proto-redir '=https' \
+  -o "$installer" https://raw.githubusercontent.com/RanggaKelaz/hermesthemeranz/main/install.sh; then
+  bash "$installer"
+else
+  printf 'Installer tidak dapat diunduh.\n' >&2
+  false
+fi
 ```
 
-Untuk instalasi berbasis profil, gunakan Hermes home profil tersebut. Tambahkan `hermesthemeranz` ke daftar `plugins.enabled` pada konfigurasi profil, dengan mempertahankan entri yang sudah ada. Di dashboard, buka **Plugins** dan gunakan kontrol refresh/rescan setelah menambahkan berkas, lalu buka kembali dashboard pada waktu yang aman. Jika plugin belum termuat, mulai ulang proses dashboard dan buka lagi. Hindari me-refresh tab Chat saat sesi sedang aktif.
+Perintah ini mengunduh installer ke berkas sementara dan menjalankan `bash` hanya jika `curl` berhasil; jangan gunakan `curl | bash`. Installer lebih dulu memeriksa bahwa bundle JS yang dirujuk oleh `web_dist/index.html` memiliki `chatBridgeVersion: 1`. Jika marker tidak ditemukan, proses berhenti sebelum mengunduh arsip plugin atau mengubah berkas. Arsip diunduh melalui HTTPS, divalidasi, disiapkan, lalu dipasang hanya ke folder plugin pada `${HERMES_HOME:-$HOME/.hermes}`. Build dashboard host (`web_dist`) tidak pernah diubah.
 
-Untuk beberapa server Hermes terpisah, pasang plugin di tiap Hermes home. Jika semua perangkat memakai satu server bersama, cukup pasang sekali di server itu.
+Jika plugin bernama sama atau `config.yaml` sudah ada, salinan lama disimpan dengan nama backup unik sebelum CLI Hermes mengaktifkan plugin. Backup tidak ditimpa atau dihapus. Installer tidak menggunakan `sudo` dan tidak merestart dashboard aktif. Untuk instalasi pada profile tertentu, atur `HERMES_HOME` ke home profile tersebut sebelum menjalankan perintah. Bila dashboard sedang terbuka, muat ulang atau rescan plugin hanya pada waktu yang aman untuk sesi aktif.
 
-Jalankan `pnpm test` untuk tes plugin. Tes visual CSS menggunakan Chrome di `/usr/bin/google-chrome` atau lokasi dari `CHROME_BIN`; jika tidak tersedia, tes visual dilewati.
+## Pengembangan dan tes
 
-## Bridge lama
+```sh
+pnpm test
+pnpm build
+```
 
-Tema saat ini tidak memerlukan jembatan aktif-chat. Patch historis [`patches/hermes-active-chat-bridge.patch`](patches/hermes-active-chat-bridge.patch) tetap disimpan sebagai artefak kompatibilitas dari versi composer sebelumnya, tetapi **jangan menerapkannya hanya untuk mengaktifkan tema ini**. Ia tidak diperlukan untuk latar, transparansi panel, atau font UI.
+Build menulis hanya ke `dashboard/dist`. Tes visual responsif memakai Chrome dari `/usr/bin/google-chrome` atau `CHROME_BIN`; tes tersebut dilewati jika Chrome tidak tersedia. Tes installer memakai Hermes dan `curl` tiruan di direktori sementara, tanpa mengubah instalasi aktif.
+
+Tes host dan pemeriksaan tipe dijalankan dari checkout Hermes:
+
+```sh
+pnpm --dir web exec vitest run src/plugins/activeChatBridge.test.ts src/plugins/registry.test.ts src/components/ChatSidebar.test.tsx src/pages/ChatPage.test.tsx src/pages/ChatPage.a11y.test.tsx
+pnpm --dir web run typecheck
+```
 
 ## Atribusi
 
-Visualisasi black-hole binary: NASA Goddard Space Flight Center, Jeremy Schnittman, dan Brian P. Powell. Sumber: [NASA Scientific Visualization Studio, 14132](https://svs.gsfc.nasa.gov/14132/). GIF asli: [BHW Binary Black Holes Accretion Disk](https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Binary_Black_Holes_Accretion_Disk.gif).
+Visualisasi black-hole binary dibuat oleh NASA Goddard Space Flight Center, Jeremy Schnittman, dan Brian P. Powell. Sumber: [NASA Scientific Visualization Studio, 14132](https://svs.gsfc.nasa.gov/14132/). GIF asli: [BHW Binary Black Holes Accretion Disk](https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Binary_Black_Holes_Accretion_Disk.gif).

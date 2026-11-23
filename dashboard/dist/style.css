@@ -16,9 +16,20 @@ body.hermesthemeranz-active .hermes-chat-workspace > #chat-composer-panel {
   display: none !important;
 }
 
+body.hermesthemeranz-active .hermes-chat-bubble-view {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
 body.hermesthemeranz-active [data-layout-variant] div:has(> .hermes-chat-xterm-host) {
   background-color: rgba(4, 28, 28, 0.9) !important;
   background-color: color-mix(in srgb, var(--theme-terminal-background, #041c1c) 90%, transparent) !important;
+}
+
+body.hermesthemeranz-active [data-layout-variant] div[data-chat-mode="bubble"]:has(> .hermes-chat-xterm-host) {
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .htr-backdrop {
@@ -39,8 +50,359 @@ body.hermesthemeranz-active [data-layout-variant] div:has(> .hermes-chat-xterm-h
     url("../assets/blackhole-binary-nasa-still.png");
 }
 
+.htr-mode-switch {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-self: flex-end;
+  gap: 4px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 8px auto;
+  padding: 4px;
+  border: 1px solid rgba(222, 235, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(5, 11, 20, 0.86);
+  color: #f7faff;
+  font-family: "Nunito Sans", "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.htr-mode-switch button {
+  min-width: 84px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #dce8f7;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.htr-mode-switch button[aria-pressed="true"] {
+  border-color: rgba(181, 218, 255, 0.46);
+  background: rgba(31, 78, 121, 0.94);
+  color: #ffffff;
+}
+
+.htr-mode-switch button:hover {
+  background-color: rgba(85, 139, 193, 0.3);
+  color: #ffffff;
+}
+
+.htr-mode-switch button:active,
+.htr-composer button:active,
+.htr-bubble-fallback button:active {
+  background-color: #0d3552;
+  transform: translateY(1px);
+}
+
+.htr-bubble button:focus-visible,
+.htr-mode-switch button:focus-visible,
+.htr-bubble input:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.htr-bubble {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: clamp(10px, 2vw, 22px);
+  border: 1px solid rgba(222, 235, 255, 0.22);
+  border-radius: inherit;
+  background: rgba(3, 8, 16, 0.82);
+  color: #f7f9fc;
+  font-family: "Nunito Sans", "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.55;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.htr-transcript {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 8px clamp(2px, 1.4vw, 16px) 14px;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(193, 215, 240, 0.42) transparent;
+}
+
+.htr-message {
+  width: fit-content;
+  max-width: min(86%, 54rem);
+  min-width: 0;
+  padding: 12px 16px;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(221, 235, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(13, 19, 30, 0.96);
+  color: #f7f9fc;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.htr-message-user {
+  align-self: flex-end;
+  background: rgba(13, 55, 90, 0.97);
+}
+
+.htr-message-assistant {
+  align-self: flex-start;
+}
+
+.htr-message-role {
+  display: block;
+  margin-bottom: 4px;
+  color: #c8d7e9;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+.htr-message-content {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.htr-welcome {
+  width: min(100%, 36rem);
+  margin: auto;
+  padding: 24px 12px;
+  color: #f7f9fc;
+  text-align: center;
+}
+
+.htr-hermes-logo {
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 12px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.48));
+}
+
+.htr-welcome h2 {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  font-weight: 750;
+}
+
+.htr-welcome p {
+  margin: 0;
+  color: #e0e8f3;
+}
+
+.htr-activity {
+  position: relative;
+  width: fit-content;
+  max-width: min(100%, 54rem);
+  min-width: min(42%, 17rem);
+  align-self: flex-start;
+  box-sizing: border-box;
+  padding: 11px 14px 16px;
+  overflow: hidden;
+  border: 1px solid rgba(221, 235, 255, 0.18);
+  border-radius: 13px;
+  background: rgba(12, 18, 29, 0.96);
+  color: #f1f6fc;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.htr-activity-line {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.htr-activity-line::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #ffffff, transparent);
+  content: "";
+  filter: drop-shadow(0 0 4px #ffffff);
+  animation: htr-activity-sweep 900ms cubic-bezier(0.2, 0.65, 0.35, 1) 1 both;
+}
+
+.htr-progress-track {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(199, 219, 243, 0.28);
+}
+
+.htr-progress-track[data-progress="determinate"] .htr-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #a9d7ff;
+}
+
+.htr-progress-track[data-progress="indeterminate"] .htr-progress-fill {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: repeating-linear-gradient(135deg, #c8e4ff 0 6px, #6c9dc9 6px 12px);
+}
+
+.htr-send-error {
+  margin: 0 0 8px;
+  color: #ffe3e3;
+  font-size: 0.9rem;
+}
+
+.htr-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 10px;
+  align-items: end;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(221, 235, 255, 0.26);
+  border-radius: 16px;
+  background: rgba(7, 13, 23, 0.94);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+}
+
+.htr-composer-label {
+  grid-column: 1 / -1;
+  color: #e0e9f5;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.htr-composer input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(194, 218, 245, 0.38);
+  border-radius: 11px;
+  background: rgba(16, 25, 39, 0.98);
+  color: #ffffff;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.htr-composer input::placeholder {
+  color: #d0d9e6;
+}
+
+.htr-composer button,
+.htr-bubble-fallback button {
+  min-width: 84px;
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid rgba(190, 222, 255, 0.42);
+  border-radius: 11px;
+  background: #174d78;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.htr-composer button:hover,
+.htr-bubble-fallback button:hover {
+  background: #226493;
+}
+
+.htr-composer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.htr-bubble-fallback {
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.htr-bubble-fallback p {
+  max-width: 34rem;
+  margin: 0;
+}
+
+@keyframes htr-activity-sweep {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(520%); }
+}
+
+@media (max-width: 640px) {
+  .htr-mode-switch {
+    align-self: center;
+    margin-inline: auto;
+  }
+
+  .htr-bubble {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .htr-transcript {
+    gap: 10px;
+    padding: 6px 2px 10px;
+  }
+
+  .htr-message {
+    max-width: 94%;
+    padding: 10px 12px;
+    font-size: 0.96rem;
+  }
+
+  .htr-activity {
+    min-width: min(72%, 17rem);
+  }
+
+  .htr-composer {
+    gap: 7px;
+    padding: 8px;
+  }
+
+  .htr-composer button {
+    min-width: 72px;
+    padding-inline: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .htr-backdrop {
     transition: none !important;
+  }
+
+  .htr-activity-line::after {
+    animation: none !important;
   }
 }

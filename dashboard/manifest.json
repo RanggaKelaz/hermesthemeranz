@@ -2,13 +2,13 @@
   "name": "hermesthemeranz",
   "label": "Hermes Theme Ranz",
   "version": "1.0.0",
-  "description": "Dashboard-only black-hole backdrop, soft UI font, and translucent terminal pane.",
+  "description": "Black-hole dashboard theme with Terminal and Bubble chat views.",
   "icon": "Puzzle",
   "tab": {
     "path": "/hermesthemeranz",
     "hidden": true
   },
-  "slots": ["backdrop"],
+  "slots": ["backdrop", "chat:top", "chat:surface"],
   "entry": "dist/index.js",
   "css": "dist/style.css"
 }
